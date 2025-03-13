@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>占星盤計算結果</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: Arial, "Microsoft JhengHei", sans-serif;
+        }
+        .container {
+            max-width: 1000px;
+            margin-top: 30px;
+            margin-bottom: 30px;
+            padding: 30px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            color: #4a3b8b;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .btn-primary {
+            background-color: #4a3b8b;
+            border-color: #4a3b8b;
+        }
+        .btn-primary:hover {
+            background-color: #3c2e70;
+            border-color: #3c2e70;
+        }
+        .btn-outline-primary {
+            color: #4a3b8b;
+            border-color: #4a3b8b;
+        }
+        .btn-outline-primary:hover {
+            background-color: #4a3b8b;
+            border-color: #4a3b8b;
+        }
+        .chart-container {
+            margin-top: 20px;
+            margin-bottom: 30px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            background-color: #fff;
+            height: 800px;
+            overflow: auto;
+        }
+        .chart-info {
+            margin-top: 20px;
+            margin-bottom: 30px;
+        }
+        .download-section {
+            margin-top: 30px;
+            text-align: center;
+        }
+        .info-card {
+            background-color: #f8f9fc;
+            border-left: 5px solid #4a3b8b;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>占星盤計算結果</h1>
+        
+        <div class="info-card">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>出生資訊</h5>
+                    <p>日期：{{ year }}年{{ month }}月{{ day }}日</p>
+                    <p>時間：{{ hour }}時{{ minute }}分</p>
+                </div>
+                <div class="col-md-6">
+                    <h5>地理位置</h5>
+                    <p>經度：{{ longitude }}</p>
+                    <p>緯度：{{ latitude }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <h2>占星盤圖表</h2>
+        <div class="chart-container">
+            <iframe src="{{ url_for('view_chart', filename=html_file) }}" width="100%" height="100%" frameborder="0"></iframe>
+        </div>
+        
+        <div class="download-section">
+            <h4>下載資料</h4>
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <a href="{{ url_for('download_file', filename=html_file) }}" class="btn btn-outline-primary w-100 mb-2">
+                        <i class="bi bi-download"></i> 下載HTML占星盤
+                    </a>
+                </div>
+                <div class="col-md-6">
+                    {% if txt_file %}
+                    <a href="{{ url_for('download_file', filename=txt_file) }}" class="btn btn-outline-primary w-100 mb-2">
+                        <i class="bi bi-download"></i> 下載TXT詳細數據
+                    </a>
+                    {% else %}
+                    <button class="btn btn-outline-secondary w-100 mb-2" disabled>
+                        TXT數據不可用
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{{ url_for('index') }}" class="btn btn-primary">
+                <i class="bi bi-arrow-left"></i> 返回計算表單
+            </a>
+        </div>
+        
+        <div class="mt-4 text-center">
+            <p class="text-muted small">本計算器使用Swiss Ephemeris天文曆法庫，提供高精度占星計算。</p>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</body>
+</html> 

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>發生錯誤 - 占星盤計算器</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: Arial, "Microsoft JhengHei", sans-serif;
+        }
+        .container {
+            max-width: 800px;
+            margin-top: 100px;
+            padding: 30px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        h1 {
+            color: #dc3545;
+            margin-bottom: 30px;
+        }
+        .error-icon {
+            font-size: 80px;
+            color: #dc3545;
+            margin-bottom: 30px;
+        }
+        .error-message {
+            background-color: #f8d7da;
+            border-left: 5px solid #dc3545;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: left;
+            border-radius: 5px;
+        }
+        .btn-primary {
+            background-color: #4a3b8b;
+            border-color: #4a3b8b;
+            padding: 10px 30px;
+            font-size: 18px;
+        }
+        .btn-primary:hover {
+            background-color: #3c2e70;
+            border-color: #3c2e70;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="error-icon">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+        </div>
+        
+        <h1>處理請求時發生錯誤</h1>
+        
+        <div class="error-message">
+            <p>{{ error }}</p>
+        </div>
+        
+        <a href="{{ url_for('index') }}" class="btn btn-primary">
+            <i class="bi bi-arrow-left"></i> 返回首頁
+        </a>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</body>
+</html> 

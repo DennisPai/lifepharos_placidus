@@ -1,0 +1,18 @@
+# Makefile for Swiss Ephemeris on Windows
+CC = gcc
+CFLAGS = -Wall -O2 -fPIC
+
+SWEOBJ = swedate.o swehouse.o swejpl.o swemmoon.o swemplan.o sweph.o \
+         swephlib.o swecl.o swehel.o swemini.o swevents.o
+
+.c.o:
+	$(CC) -c $(CFLAGS) $<
+
+all: libswe.a
+
+libswe.a: $(SWEOBJ)
+	ar rcs libswe.a $(SWEOBJ)
+
+clean:
+	del *.o
+	del libswe.a 

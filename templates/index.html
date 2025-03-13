@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>占星盤計算器</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: Arial, "Microsoft JhengHei", sans-serif;
+        }
+        .container {
+            max-width: 800px;
+            margin-top: 30px;
+            margin-bottom: 30px;
+            padding: 30px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #4a3b8b;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .form-label {
+            font-weight: 600;
+        }
+        .btn-primary {
+            background-color: #4a3b8b;
+            border-color: #4a3b8b;
+            width: 100%;
+            padding: 10px;
+            font-size: 18px;
+            margin-top: 20px;
+        }
+        .btn-primary:hover {
+            background-color: #3c2e70;
+            border-color: #3c2e70;
+        }
+        .alert {
+            margin-top: 20px;
+        }
+        .description {
+            margin-bottom: 25px;
+            color: #666;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>占星盤計算器</h1>
+        <p class="description">輸入出生日期、時間和地點，獲取詳細的占星盤分析</p>
+        
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-danger">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <form method="POST" action="{{ url_for('calculate') }}">
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="year" class="form-label">年份</label>
+                    <input type="number" class="form-control" id="year" name="year" placeholder="例如：1990" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="month" class="form-label">月份</label>
+                    <input type="number" class="form-control" id="month" name="month" min="1" max="12" placeholder="1-12" required>
+                </div>
+                <div class="col-md-4">
+                    <label for="day" class="form-label">日期</label>
+                    <input type="number" class="form-control" id="day" name="day" min="1" max="31" placeholder="1-31" required>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="hour" class="form-label">小時（24小時制）</label>
+                    <input type="number" class="form-control" id="hour" name="hour" min="0" max="23" placeholder="0-23" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="minute" class="form-label">分鐘</label>
+                    <input type="number" class="form-control" id="minute" name="minute" min="0" max="59" placeholder="0-59" required>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="longitude" class="form-label">經度（東經為正，西經為負）</label>
+                    <input type="number" class="form-control" id="longitude" name="longitude" step="0.01" placeholder="例如：121.5" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="latitude" class="form-label">緯度（北緯為正，南緯為負）</label>
+                    <input type="number" class="form-control" id="latitude" name="latitude" step="0.01" placeholder="例如：25.0" required>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">計算占星盤</button>
+        </form>
+        
+        <div class="mt-4 text-center">
+            <p class="text-muted small">本計算器使用Swiss Ephemeris天文曆法庫，提供高精度占星計算。</p>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 
