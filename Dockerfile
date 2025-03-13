@@ -1,9 +1,14 @@
 FROM python:3.9-slim
 
 # 安裝wine以支持運行Windows程序
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    wine \
-    wine32 \
+RUN dpkg --add-architecture i386 && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+        wine \
+        wine64 \
+        libwine \
+        libwine:i386 \
+        fonts-wine \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
