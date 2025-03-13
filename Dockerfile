@@ -1,12 +1,5 @@
 FROM python:3.9-slim
 
-# 安裝wine以支持運行Windows程序
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    wine \
-    wine32 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
 WORKDIR /app
 
 # 複製依賴文件

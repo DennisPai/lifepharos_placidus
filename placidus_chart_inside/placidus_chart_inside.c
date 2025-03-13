@@ -11,6 +11,7 @@
 #include <math.h>
 #include <direct.h>  /* 用於創建目錄 */
 #include <sys/stat.h>  /* 用於檢查目錄是否存在 */
+#include <io.h>  /* 用於 access() 函數, Windows系統 */
 #include "swisseph-master_inside/swephexp.h"   /* Swiss Ephemeris header */
 
 #define PLANETS_COUNT 10  /* 太陽到冥王星 */
@@ -19,6 +20,7 @@
 #define HOUSES_COUNT 12   /* 12宮 */
 #define ASPECTS_COUNT 5   /* 合相、三分相、六分相、二分相、四分相 */
 #define EPHE_PATH "./swisseph-master_inside/ephe" /* 星曆表路徑 */
+#define DE406_PATH "./de406.eph" /* DE406星曆表路徑 */
 #define PI 3.14159265358979323846
 
 /* 星座名稱 */
@@ -227,35 +229,42 @@ int main(int argc, char *argv[])
     /* 設定ephemeris路徑 */
     swe_set_ephe_path(EPHE_PATH);
     
-    /* 檢查JPL星曆表優先順序：DE441 > DE431 > 瑞士星曆表 > Moshier */
-    char ephe_path_full[512];
-    /* 構建完整路徑以確保正確檢測 */
-    sprintf(ephe_path_full, "%s/de441.eph", EPHE_PATH);
-    FILE *jpl_file = fopen(ephe_path_full, "rb");
-    if (jpl_file != NULL) {
-        fclose(jpl_file);
-        printf("找到JPL星曆表(DE441)，使用最高精確度計算\n");
+    /* 檢查JPL星曆表優先順序：DE406 > DE441 > DE431 > 瑞士星曆表 > Moshier */
+    /* 優先使用DE406星曆表 */
+    if (access(DE406_PATH, F_OK) == 0) {
+        printf("找到JPL星曆表(DE406)，使用最高精確度計算\n");
         ephemeris_type = SEFLG_JPLEPH;
-        swe_set_jpl_file(ephe_path_full);
+        swe_set_jpl_file(DE406_PATH);
     } else {
-        sprintf(ephe_path_full, "%s/de431.eph", EPHE_PATH);
-        jpl_file = fopen(ephe_path_full, "rb");
+        char ephe_path_full[512];
+        /* 構建完整路徑以確保正確檢測 */
+        sprintf(ephe_path_full, "%s/de441.eph", EPHE_PATH);
+        FILE *jpl_file = fopen(ephe_path_full, "rb");
         if (jpl_file != NULL) {
             fclose(jpl_file);
-            printf("找到JPL星曆表(DE431)，使用最高精確度計算\n");
+            printf("找到JPL星曆表(DE441)，使用最高精確度計算\n");
             ephemeris_type = SEFLG_JPLEPH;
             swe_set_jpl_file(ephe_path_full);
         } else {
-            /* 檢查瑞士星曆表 */
-            sprintf(ephe_path_full, "%s/semo_00.se1", EPHE_PATH);
-            FILE *swiss_file = fopen(ephe_path_full, "r");
-            if (swiss_file != NULL) {
-                fclose(swiss_file);
-                printf("找到瑞士星曆表，使用精確計算\n");
-                ephemeris_type = SEFLG_SWIEPH;
+            sprintf(ephe_path_full, "%s/de431.eph", EPHE_PATH);
+            jpl_file = fopen(ephe_path_full, "rb");
+            if (jpl_file != NULL) {
+                fclose(jpl_file);
+                printf("找到JPL星曆表(DE431)，使用最高精確度計算\n");
+                ephemeris_type = SEFLG_JPLEPH;
+                swe_set_jpl_file(ephe_path_full);
             } else {
-                printf("未找到星曆表文件，使用內建近似計算 (嘗試路徑: %s)\n", ephe_path_full);
-                ephemeris_type = SEFLG_MOSEPH;
+                /* 檢查瑞士星曆表 */
+                sprintf(ephe_path_full, "%s/semo_00.se1", EPHE_PATH);
+                FILE *swiss_file = fopen(ephe_path_full, "r");
+                if (swiss_file != NULL) {
+                    fclose(swiss_file);
+                    printf("找到瑞士星曆表，使用精確計算\n");
+                    ephemeris_type = SEFLG_SWIEPH;
+                } else {
+                    printf("未找到星曆表文件，使用內建近似計算 (嘗試路徑: %s)\n", ephe_path_full);
+                    ephemeris_type = SEFLG_MOSEPH;
+                }
             }
         }
     }
