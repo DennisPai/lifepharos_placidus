@@ -2,6 +2,17 @@
 
 這是一個基於Flask的Web應用程序，為瑞士星曆占星盤計算程序提供了一個友好的用戶界面。
 
+## 星曆檔案安裝說明
+
+本專案使用的星曆檔案（.eph）由於檔案較大未包含在Git倉庫中。
+使用者需要自行下載這些檔案並放置在正確位置：
+
+1. 下載星曆檔案：[Swiss Ephemeris官方網站](https://www.astro.com/ftp/swisseph/)
+2. 解壓縮下載的檔案
+3. 將星曆檔案放置於以下目錄：
+   - `swisseph-master/ephe/`
+   - `placidus_chart_inside/swisseph-master_inside/ephe/`
+
 ## 功能特點
 
 - 簡單易用的Web界面，用於輸入出生日期、時間和地點
