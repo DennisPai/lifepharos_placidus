@@ -43,9 +43,11 @@ Thumbs.db
 *.swp
 *.swo 
 
-# 排除所有.eph檔案
+# 排除所有.eph檔案，但保留de406.eph
 *.eph
+!de406.eph
+!**/de406.eph
 
-# 排除特定目錄下的檔案
-swisseph-master/ephe/
-placidus_chart_inside/swisseph-master_inside/ephe/
+# 特定目錄的例外規則
+!swisseph-master/ephe/de406.eph
+!placidus_chart_inside/swisseph-master_inside/ephe/de406.eph
