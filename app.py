@@ -40,7 +40,8 @@ if IS_WINDOWS:
 else:
     # 在非Windows環境下，我們使用Wine來運行Windows可執行文件
     PLACIDUS_CHART_DIR = os.path.join(os.path.dirname(__file__), 'placidus_chart_inside')
-    PLACIDUS_CHART_EXE = f'{WINE_EXECUTABLE} ' + os.path.join(PLACIDUS_CHART_DIR, 'placidus_chart_inside.exe')
+    PLACIDUS_CHART_EXE_PATH = os.path.join(PLACIDUS_CHART_DIR, 'placidus_chart_inside.exe')
+    PLACIDUS_CHART_EXE = f'{WINE_EXECUTABLE} "{PLACIDUS_CHART_EXE_PATH}"'
 
 # 確保星曆表文件在正確的位置
 def ensure_ephemeris_file():
@@ -105,11 +106,20 @@ def calculate():
                 # 即使Wine不可用，也繼續嘗試執行 - Zeabur的Docker環境應該已配置好Wine
         
         # 構建命令
-        cmd = f"{PLACIDUS_CHART_EXE} {year} {month} {day} {hour} {minute} {longitude} {latitude}"
+        if IS_WINDOWS:
+            cmd = f'"{PLACIDUS_CHART_EXE}" {year} {month} {day} {hour} {minute} {longitude} {latitude}'
+        else:
+            # 對於Wine，我們需要確保路徑格式正確
+            cmd = f'{WINE_EXECUTABLE} "{PLACIDUS_CHART_EXE_PATH}" {year} {month} {day} {hour} {minute} {longitude} {latitude}'
+        
         logger.info(f"執行命令: {cmd}")
         
         # 在占星盤程序目錄中執行命令
-        working_dir = os.path.dirname(PLACIDUS_CHART_EXE.split()[0] if ' ' in PLACIDUS_CHART_EXE else PLACIDUS_CHART_EXE)
+        if IS_WINDOWS:
+            working_dir = os.path.dirname(PLACIDUS_CHART_EXE)
+        else:
+            # 在非Windows環境下，直接使用PLACIDUS_CHART_DIR
+            working_dir = PLACIDUS_CHART_DIR
         
         logger.info(f"工作目錄: {working_dir}")
         logger.info(f"可執行文件路徑: {PLACIDUS_CHART_EXE}")
@@ -117,6 +127,29 @@ def calculate():
         
         try:
             # 執行命令
+            logger.info(f"開始執行命令: {cmd}")
+            
+            # 確保工作目錄存在
+            if not os.path.exists(working_dir):
+                logger.error(f"工作目錄不存在: {working_dir}")
+                os.makedirs(working_dir, exist_ok=True)
+                logger.info(f"已創建工作目錄: {working_dir}")
+            
+            # 檢查可執行文件是否存在
+            exe_path = os.path.join(PLACIDUS_CHART_DIR, 'placidus_chart_inside.exe')
+            if not os.path.exists(exe_path):
+                logger.error(f"可執行文件不存在: {exe_path}")
+                flash('找不到占星盤計算程序')
+                return redirect(url_for('index'))
+            
+            # 確保可執行文件有執行權限
+            if not IS_WINDOWS:
+                try:
+                    os.chmod(exe_path, 0o755)
+                    logger.info(f"已設置可執行文件權限: {exe_path}")
+                except Exception as e:
+                    logger.warning(f"設置可執行文件權限時出錯: {e}")
+            
             process = subprocess.Popen(
                 cmd,
                 shell=True,
@@ -127,13 +160,16 @@ def calculate():
             )
             stdout, stderr = process.communicate(timeout=30)  # 添加超時設置
             
+            # 記錄詳細輸出，無論成功或失敗
+            logger.info(f"命令輸出: {stdout}")
+            logger.info(f"錯誤輸出: {stderr}")
+            
             if process.returncode != 0:
                 logger.error(f"命令執行失敗，返回碼: {process.returncode}")
-                logger.error(f"stderr: {stderr}")
                 flash('計算過程中發生錯誤')
                 return redirect(url_for('index'))
             
-            logger.info(f"命令執行成功: {stdout}")
+            logger.info(f"命令執行成功，返回碼: {process.returncode}")
         
         except subprocess.TimeoutExpired:
             logger.error("命令執行超時")
@@ -148,8 +184,17 @@ def calculate():
         folder_name = f"{year}_{month}_{day}_{hour}_{minute}_{float(longitude):.2f}_{float(latitude):.2f}"
         folder_path = os.path.join(working_dir, folder_name)
         
+        logger.info(f"尋找生成的文件夾: {folder_path}")
+        
         if not os.path.exists(folder_path):
             logger.error(f"找不到生成的資料夾: {folder_path}")
+            # 列出工作目錄的內容，幫助診斷
+            try:
+                dir_content = os.listdir(working_dir)
+                logger.info(f"工作目錄內容: {dir_content}")
+            except Exception as e:
+                logger.error(f"無法列出工作目錄內容: {e}")
+            
             flash('無法找到生成的占星盤數據')
             return redirect(url_for('index'))
         
