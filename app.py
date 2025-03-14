@@ -181,13 +181,54 @@ def calculate():
             return redirect(url_for('index'))
         
         # 找到生成的文件
-        folder_name = f"{year}_{month}_{day}_{hour}_{minute}_{float(longitude):.2f}_{float(latitude):.2f}"
-        folder_path = os.path.join(working_dir, folder_name)
+        # 嘗試多種可能的文件夾名稱格式
+        possible_folder_names = [
+            # 標準格式 (分鐘可能用 '00' 或 '0')
+            f"{year}_{month}_{day}_{hour}_{minute}_{float(longitude):.2f}_{float(latitude):.2f}",
+            f"{year}_{month}_{day}_{hour}_{int(minute)}_{float(longitude):.2f}_{float(latitude):.2f}",
+            # 可能的簡化格式 (精度減少)
+            f"{year}_{month}_{day}_{hour}_{minute}_{float(longitude):.1f}_{float(latitude):.1f}",
+            f"{year}_{month}_{day}_{hour}_{int(minute)}_{float(longitude):.1f}_{float(latitude):.1f}",
+            # 最基本格式
+            f"{year}_{month}_{day}_{hour}_{minute}",
+            f"{year}_{month}_{day}_{hour}_{int(minute)}"
+        ]
         
-        logger.info(f"尋找生成的文件夾: {folder_path}")
+        folder_path = None
+        logger.info(f"嘗試尋找生成的文件夾...")
         
-        if not os.path.exists(folder_path):
-            logger.error(f"找不到生成的資料夾: {folder_path}")
+        # 檢查所有可能的文件夾名稱
+        for folder_name in possible_folder_names:
+            temp_path = os.path.join(working_dir, folder_name)
+            logger.info(f"檢查路徑: {temp_path}")
+            if os.path.exists(temp_path):
+                folder_path = temp_path
+                logger.info(f"找到匹配的文件夾: {folder_path}")
+                break
+        
+        # 如果仍然找不到，進行更廣泛的搜索
+        if folder_path is None:
+            # 列出工作目錄中所有文件夾
+            try:
+                all_items = os.listdir(working_dir)
+                all_folders = [item for item in all_items if os.path.isdir(os.path.join(working_dir, item))]
+                logger.info(f"工作目錄中的所有文件夾: {all_folders}")
+                
+                # 尋找最近創建的文件夾，該文件夾名稱包含年月日
+                matching_folders = [folder for folder in all_folders if f"{year}_{month}_{day}" in folder]
+                if matching_folders:
+                    # 按創建時間排序，取最新的
+                    latest_folder = max(
+                        matching_folders, 
+                        key=lambda f: os.path.getctime(os.path.join(working_dir, f))
+                    )
+                    folder_path = os.path.join(working_dir, latest_folder)
+                    logger.info(f"使用最近創建的匹配文件夾: {folder_path}")
+            except Exception as e:
+                logger.error(f"廣泛搜索文件夾時出錯: {e}")
+        
+        if folder_path is None:
+            logger.error(f"找不到生成的資料夾，嘗試過的名稱: {possible_folder_names}")
             # 列出工作目錄的內容，幫助診斷
             try:
                 dir_content = os.listdir(working_dir)
@@ -198,26 +239,55 @@ def calculate():
             flash('無法找到生成的占星盤數據')
             return redirect(url_for('index'))
         
-        # 複製HTML文件到結果目錄
-        html_file = os.path.join(folder_path, f"{year}_{month}_{day}_{hour}_{minute}_{float(longitude):.2f}_{float(latitude):.2f}.html")
-        txt_file = os.path.join(folder_path, f"{year}_{month}_{day}_{hour}_{minute}_{float(longitude):.2f}_{float(latitude):.2f}.txt")
+        # 根據找到的文件夾尋找HTML和TXT文件
+        # 嘗試多種可能的文件名格式
+        html_file = None
+        txt_file = None
         
-        if not os.path.exists(html_file):
-            html_file = os.path.join(working_dir, f"chart_{year}_{month}_{day}_{hour}_{minute}.html")
-            if not os.path.exists(html_file):
-                logger.error(f"找不到生成的HTML文件: {html_file}")
-                flash('無法找到生成的占星盤圖表')
-                return redirect(url_for('index'))
+        # 檢查文件夾中的文件
+        folder_files = os.listdir(folder_path)
+        logger.info(f"文件夾內容: {folder_files}")
+        
+        # 首先檢查TXT文件
+        txt_files = [f for f in folder_files if f.endswith('.txt')]
+        if txt_files:
+            txt_file = os.path.join(folder_path, txt_files[0])
+            logger.info(f"找到TXT文件: {txt_file}")
+        
+        # 檢查HTML文件
+        html_files = [f for f in folder_files if f.endswith('.html')]
+        if html_files:
+            html_file = os.path.join(folder_path, html_files[0])
+            logger.info(f"找到HTML文件: {html_file}")
+        
+        # 如果文件夾中沒有HTML文件，檢查工作目錄
+        if html_file is None:
+            possible_html_names = [
+                f"chart_{year}_{month}_{day}_{hour}_{minute}.html",
+                f"chart_{year}_{month}_{day}_{hour}_{int(minute)}.html"
+            ]
+            
+            for html_name in possible_html_names:
+                temp_path = os.path.join(working_dir, html_name)
+                if os.path.exists(temp_path):
+                    html_file = temp_path
+                    logger.info(f"在工作目錄中找到HTML文件: {html_file}")
+                    break
+        
+        if html_file is None:
+            logger.error(f"找不到生成的HTML文件")
+            flash('無法找到生成的占星盤圖表')
+            return redirect(url_for('index'))
         
         # 複製文件到結果目錄
         result_html = os.path.join(CHART_RESULTS_DIR, f"chart_{year}_{month}_{day}_{hour}_{minute}.html")
-        result_txt = os.path.join(CHART_RESULTS_DIR, f"data_{year}_{month}_{day}_{hour}_{minute}.txt")
+        result_txt = os.path.join(CHART_RESULTS_DIR, f"data_{year}_{month}_{day}_{hour}_{minute}.txt") if txt_file else None
         
         try:
             with open(html_file, 'r', encoding='utf-8') as src, open(result_html, 'w', encoding='utf-8') as dst:
                 dst.write(src.read())
             
-            if os.path.exists(txt_file):
+            if txt_file and os.path.exists(txt_file):
                 with open(txt_file, 'r', encoding='utf-8') as src, open(result_txt, 'w', encoding='utf-8') as dst:
                     dst.write(src.read())
         except Exception as e:
